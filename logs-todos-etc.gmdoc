@@ -1,3 +1,3 @@
-day 1: https://www.reddit.com/r/ruby/comments/romm10/developing_a_type_writer_app/
+day 1: https://www.reddit.com/r/ruby/comments/romm10/developing_a_type_writer_app/, + added ui template and cropped text and fixed some bugs.
 todo: create a ui for the given ux... this will make programming the ux easier...
 tasks for tomorrow: draw
