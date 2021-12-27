@@ -23,12 +23,11 @@ class TypeWriter
         new_line(args)
       end
       args.state.lines[args.state.line_cnt] = args.state.out_text
-      args.state.cursor[:y] = args.state.line_cnt * -20 + 600
-      args.state.cursor[:x] = (args.state.out_text.length * 10) + 10
+      args.state.cursor[:y] = args.state.line_cnt * -20 + 600 if $new_doc.state.line_cnt < 27
+      args.state.cursor[:x] = (args.state.out_text.length * 10) + 10 
     end
   
     def new_line(args)
-      args.state.out_text.slice!(-1,1) if args.state.out_text[-1] == "_"
       args.state.lines[args.state.line_cnt] = args.state.out_text
       args.state.line_cnt += 1 
       args.state.out_text = ""
@@ -77,8 +76,11 @@ class TypeWriter
       state.buttons_scroll_bar_down = {
         x: 617, y: 20, h: 20, w: 20
       }
-      state.name = ["UP ARROW","DOWN ARROW","DOCUMENT"]#, "DOCUMENT"]
-      state.button_list = [state.buttons_scroll_bar_up,state.buttons_scroll_bar_down,state.lettering_box]#,state.lettering_box]
+      state.scroll_bar = {
+        x: 617,y: 560, w: 20, h: 40, path: "sprites/ui/vert_scroll_bar.png"
+      }
+      state.name = ["UP ARROW","DOWN ARROW","DOCUMENT","SCROLL BAR"]#, "DOCUMENT"]
+      state.button_list = [state.buttons_scroll_bar_up,state.buttons_scroll_bar_down,state.lettering_box,state.scroll_bar]#,state.lettering_box]
       state.identifier = "N/A"
     end
   
@@ -94,9 +96,22 @@ class TypeWriter
         #ind += 1
       end
     end
+
+    def check_button_inside args, button
+      #ind = 0
+      button.map_with_index do |n, i|
+        if args.inputs.mouse.inside_rect?(n)
+          state.identifier = state.name[i]
+          return true
+        else 
+          return false
+        end
+        #ind += 1
+      end
+    end
   end
 
-  module EnglishDictionary
+module EnglishDictionary
 
 	@@words = {}
 
