@@ -67,16 +67,16 @@ class TypeWriter
     attr_gtk
   
     def init(args)
-      state.buttons_scroll_bar_up = {
-        x: 617, y: 600, h: 30, w: 30 
+      state.buttons_scroll_bar_up ||= {
+        x: 617, y: 600, h: 30, w: 20 
       }
-      state.lettering_box = {
+      state.lettering_box ||= {
         x: 10, y: 20, h: 600, w: 600
       }
-      state.buttons_scroll_bar_down = {
+      state.buttons_scroll_bar_down ||= {
         x: 617, y: 20, h: 20, w: 20
       }
-      state.scroll_bar = {
+      state.scroll_bar ||= {
         x: 617,y: 560, w: 20, h: 40, path: "sprites/ui/vert_scroll_bar.png"
       }
       state.name = ["UP ARROW","DOWN ARROW","DOCUMENT","SCROLL BAR"]#, "DOCUMENT"]
@@ -99,15 +99,12 @@ class TypeWriter
 
     def check_button_inside args, button
       #ind = 0
-      button.map_with_index do |n, i|
-        if args.inputs.mouse.inside_rect?(n)
-          state.identifier = state.name[i]
+        if args.inputs.mouse.inside_rect?(button)
+          #state.identifier = state.name[i]
           return true
         else 
           return false
         end
-        #ind += 1
-      end
     end
   end
 

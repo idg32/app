@@ -51,8 +51,6 @@ end
 #   args.outputs.line << (x,y,x-len,y)
 # end
 
-def scroll_up args
-end
 
 def tick args
   load_file(args) if args.state.tick_count == 1
@@ -72,46 +70,68 @@ def tick args
   $new_doc.state.broken_words ||= []
   $new_doc.state.copy_lines ||= []
   args.state.display_text ||= [""]
+  args.state.up_down ||= "sprites/ui/arrow_down.png"
   args.state.up_arrow ||= "sprites/ui/arrow_up.png"
   args.state.vert_scroll ||= "sprites/ui/vert_scroll_bar.png"
   args.state.display_cnt ||= 0
   args.state.display_cur ||= 0
   args.state.display_max ||= 29
+  args.state.scroll_enable    ||= false
+  
   if args.state.tick_count % 100 > 50
       $new_doc.flash_cursor(args)
   end
+
   if args.state.tick_count % 10 == 1
-    if !args.inputs.mouse.click && $button_soft_ware.state.identifier != "UP ARROW" && $button_soft_ware.check_button_inside( args, $button_soft_ware.state.buttons_scroll_bar_up  )
+    if !args.inputs.mouse.down && $button_soft_ware.check_button_inside( args, $button_soft_ware.state.buttons_scroll_bar_up  )
       args.state.up_arrow = "sprites/ui/arrow_up_hover.png" 
-    elsif args.inputs.mouse.click && $button_soft_ware.state.identifier == "UP ARROW"
+    elsif args.inputs.mouse.down && $button_soft_ware.check_button_inside( args, $button_soft_ware.state.buttons_scroll_bar_up  )
       args.state.up_arrow = "sprites/ui/arrow_up_pressed.png" 
     else
       args.state.up_arrow = "sprites/ui/arrow_up.png"
     end
   end
 
- # if args.state.tick_count % 10 == 1
-    if $button_soft_ware.state.identifier != "SCROLL BAR" && $button_soft_ware.check_button_inside( args, $button_soft_ware.state.scroll_bar )
-      $button_soft_ware.state.scroll_bar[:path] = "sprites/ui/vert_scroll_bar_hover.png" 
-    elsif args.inputs.mouse.click && $button_soft_ware.state.identifier == "SCROLL BAR" && $button_soft_ware.check_button_inside( args, $button_soft_ware.state.scroll_bar  ) 
-      $button_soft_ware.state.scroll_bar[:path] = "sprites/ui/vert_scroll_bar_pressed.png" 
+  if args.state.tick_count % 2 == 1
+    if !args.inputs.mouse.down && $button_soft_ware.check_button_inside( args, $button_soft_ware.state.buttons_scroll_bar_down  )
+      args.state.up_down = "sprites/ui/arrow_down_hover.png" 
+    elsif args.inputs.mouse.down && $button_soft_ware.check_button_inside( args, $button_soft_ware.state.buttons_scroll_bar_down )
+      args.state.up_down = "sprites/ui/arrow_down_pressed.png" 
     else
-      $button_soft_ware.state.scroll_bar[:path] = "sprites/ui/vert_scroll_bar.png"
+      args.state.up_down = "sprites/ui/arrow_down.png"
     end
+
+    if !args.inputs.mouse.down && $button_soft_ware.check_button_inside( args, $button_soft_ware.state.scroll_bar ) && args.state.scroll_enable == false
+      $button_soft_ware.state.scroll_bar[:path] = "sprites/ui/vert_scroll_bar_hover.png" 
+    elsif $button_soft_ware.state.identifier == "SCROLL BAR" && args.inputs.mouse.down
+      $button_soft_ware.state.scroll_bar[:path] = "sprites/ui/vert_scroll_bar_pressed.png" 
+      args.state.scroll_enable = true
+    elsif $button_soft_ware.check_button_inside( args, $button_soft_ware.state.scroll_bar  ) == false
+      $button_soft_ware.state.scroll_bar[:path] = "sprites/ui/vert_scroll_bar.png"
+      args.state.scroll_enable = false
+    end
+  end
+
+ # if args.state.tick_count % 10 == 1
   #end
   args.state.last_key = args.inputs.text[-1] unless args.inputs.text.empty?
 
-  if args.inputs.mouse.click
+  if args.inputs.mouse.down
     $button_soft_ware.check_button( args, $button_soft_ware.state.button_list )
     if args.state.display_cur != 0  && $button_soft_ware.state.identifier == "UP ARROW"
+      args.state.last_y = $new_doc.state.cursor[:y]
       args.state.display_cur -= 1 
       $new_doc.state.cursor[:y] -= 20 unless $new_doc.state.cursor[:y] <= 32
+      $new_doc.state.cursor[:y] = args.state.last_y if $new_doc.state.cursor[:y] <= 32
+
       $button_soft_ware.state.scroll_bar[:y] += 20 if $button_soft_ware.state.scroll_bar[:y] < 580
     end
     if args.state.display_cur < args.state.display_cnt && $button_soft_ware.state.identifier == "DOWN ARROW"
+      args.state.last_y = $new_doc.state.cursor[:y]
       args.state.display_cur += 1 
-      $new_doc.state.cursor[:y] += 20 unless $new_doc.state.cursor[:y] == 580
+      $new_doc.state.cursor[:y] += 20 if args.state.display_cur < args.state.display_max
       $button_soft_ware.state.scroll_bar[:y] -= 20 if $button_soft_ware.state.scroll_bar[:y] > 32 
+      $new_doc.state.cursor[:y] = args.state.last_y if args.state.display_cur == args.state.display_max
 
     end
   end
@@ -130,29 +150,18 @@ def tick args
     puts args.state.display_text
     $new_doc.state.broken_words = []
     temp = $new_doc.state.lines.join(" ")
-    # len = []
-    # temp.split.each_with_index do |line, index|
-    #   puts is_word(line, args)
-    #   $new_doc.state.broken_words << line if !is_word(line, args)
-    #   #$new_doc.state.broken_words_cnt += 1 if $new_doc.state.broken_words[$new_doc.state.broken_words_cnt].length % $new_doc.state.max_len == 58 
-    # end
-    # puts $new_doc.state.broken_words
+
     mak = -1
     len = []
     temp.split.each_with_index do |line, index|
       len = (args.gtk.calcstringbox line)
       puts len if !is_word(line.tr('?,./!@#$%^&*()_+',''), args)
-      # if index < 3 
+
         xrer = 20 * index#( len[0] - 10) + 20 * index
-      #else
-      #   xrer = (index * len[0]).clamp(20,len[0]) + len[0] * 2
-      # end
-      # puts index
-      # puts is_word(line, args)
+
       $new_doc.state.broken_words << line if !is_word(line.tr('?,./!@#$%^&*()_+',''), args) && line != ""
 
-      #$new_doc.state.broken_words << { x: xrer  , y: $new_doc.state.line_cnt * -20 + 580, word: line, length: len[0]} if !is_word(line.tr('?,./!@#$%^&*()_+',''), args) && line != ""
-    end
+      end
   end
 
   if $button_soft_ware.state.identifier == "DOCUMENT"
@@ -180,7 +189,7 @@ def tick args
   end
 
   if (args.inputs.keyboard.key_down.backspace) || (args.inputs.keyboard.key_held.backspace && $new_doc.state.line_cnt > -1 && args.state.tick_count % var_unter == var_uver )
-    $button_soft_ware.state.scroll_bar[:y] += 20 if $button_soft_ware.state.scroll_bar[:y] < 580 if args.state.last_y != $new_doc.state.cursor[:y]
+    $button_soft_ware.state.scroll_bar[:y] += 20 if $button_soft_ware.state.scroll_bar[:y] < 560 if args.state.last_y != $new_doc.state.cursor[:y]
     
     args.state.last_y = $new_doc.state.cursor[:y]
     $new_doc.delete_string(args) 
@@ -196,10 +205,16 @@ def tick args
   args.outputs.sprites << [20,700-57,576,54,"sprites/ui/binding_box_menu.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
   args.outputs.lines   << [30,630,600-30,630]
   args.outputs.sprites << [600+17,20,20,600,"sprites/ui/vert_scroll_bar_bg.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
-  args.outputs.sprites << $button_soft_ware.state.scroll_bar if args.state.tick_count > 10
+  args.outputs.sprites << $button_soft_ware.state.scroll_bar if args.state.tick_count > 2
   args.outputs.sprites << [654,20,600,600,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+  #this is the spelling error box
+  args.outputs.sprites << [674,480,560,100,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+  args.outputs.sprites << [654,560,20,20,args.state.up_arrow,0,$new_doc.state.colors[$new_doc.state.color_cur]]
+  args.outputs.sprites << [654,480,20,20,args.state.up_down,0,$new_doc.state.colors[$new_doc.state.color_cur]]
+
+
   args.outputs.sprites << [600+17,600,20,20,args.state.up_arrow,0,$new_doc.state.colors[$new_doc.state.color_cur]]
-  args.outputs.sprites << [600+17,20,20,20,"sprites/ui/arrow_down.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+  args.outputs.sprites << [600+17,20,20,20,args.state.up_down,0,$new_doc.state.colors[$new_doc.state.color_cur]]
   args.outputs.labels << [650,700,"Line Length: #{$new_doc.state.out_text.length}"]
   args.outputs.labels << [900,650,"LAST KEY: #{args.state.last_key}"]
   args.outputs.labels << [900,700,"Button Sel: #{$button_soft_ware.state.identifier}"]
@@ -212,8 +227,8 @@ def tick args
   end
 
   long_strings_split = args.string.wrapped_lines $new_doc.state.broken_words.join(" "), 59 unless $new_doc.state.broken_words == []
-  args.outputs.labels << {x: 670, y: 600, text: long_strings_split.join(" ")} unless $new_doc.state.broken_words == []
-  args.outputs.labels << {x: 670, y: 200, text: "#{args.inputs.mouse.point.x} : #{args.inputs.mouse.point.y}"}
+  args.outputs.labels << {x: 684, y: 580, text: long_strings_split.join(" ")} unless $new_doc.state.broken_words == []
+  args.outputs.labels << {x: 674, y: 200, text: "#{args.inputs.mouse.point.x} : #{args.inputs.mouse.point.y} : #{args.inputs.mouse.click}"}
 
   # limt = $new_doc.state.broken_words args.inputs.text
   # for i in 0...limt.size
