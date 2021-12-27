@@ -1,0 +1,4 @@
+for a given entity y: we only bind to nth and null
+for a given distance y - y,0: we get distance to another coordinate
+increment +/- based on this
+ok that helped

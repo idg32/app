@@ -67,6 +67,7 @@ class TypeWriter
     attr_gtk
   
     def init(args)
+      len = args.gtk.calcstringbox "DARK THEME"
       state.buttons_scroll_bar_up ||= {
         x: 617, y: 600, h: 30, w: 20 
       }
@@ -79,8 +80,20 @@ class TypeWriter
       state.scroll_bar ||= {
         x: 617,y: 560, w: 20, h: 40, path: "sprites/ui/vert_scroll_bar.png"
       }
-      state.name = ["UP ARROW","DOWN ARROW","DOCUMENT","SCROLL BAR"]#, "DOCUMENT"]
-      state.button_list = [state.buttons_scroll_bar_up,state.buttons_scroll_bar_down,state.lettering_box,state.scroll_bar]#,state.lettering_box]
+      state.check_spelling ||= {
+        x: 280,y: 700-57,w: 48,h: 48
+      }
+      state.dark_theme ||= {
+        x: 680, y: 580, w: len[0] , h: 30, path: "sprites/ui/binding_box_lettering.png"
+      }
+      state.restart ||= {
+        x: 400,y: 643,w: 48,h: 48
+      }
+      state.quit ||= {
+        x: 520,y: 700-57,w: 48,h: 48
+      }
+      state.name = ["UP ARROW","DOWN ARROW","DOCUMENT","SCROLL BAR","CHECK YOUR SPELLING","DARK THEME","RESTART","QUIT"]#, "DOCUMENT"]
+      state.button_list = [state.buttons_scroll_bar_up,state.buttons_scroll_bar_down,state.lettering_box,state.scroll_bar,state.check_spelling,state.dark_theme,state.restart,state.quit      ]#,state.lettering_box]
       state.identifier = "N/A"
     end
   
