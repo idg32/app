@@ -68,6 +68,10 @@ def do_things args
       end
   end
 
+  if $button_soft_ware.state.identifier == "FILE NAME" && !args.inputs.text.empty?
+    $new_doc.write_file_name(args)
+  end
+
   if args.state.tick_count % 10 == 1
     if !args.inputs.mouse.down && $button_soft_ware.check_button_inside( args, $button_soft_ware.state.buttons_scroll_bar_up  )
       args.state.up_arrow = "sprites/ui/arrow_up_hover.png" 
@@ -148,6 +152,17 @@ def do_things args
     if $button_soft_ware.state.identifier == "QUIT"
       $gtk.request_quit
     end
+    if $button_soft_ware.state.identifier == "APPEND"
+      $new_doc.write_file_doc(args)
+    end
+    if $button_soft_ware.state.identifier == "OPEN"
+      $new_doc.state.lines = $new_doc.open_file_doc(args).split("\n")
+      $new_doc.state.line_cnt = $new_doc.state.lines.size
+      $new_doc.state.cursor[:y] = $new_doc.state.lines.size  * -20 + 600
+    end
+    if $button_soft_ware.state.identifier == "FILE NAME"
+      $new_doc.state.file_name_txt = ""
+    end
   end
 
   if args.inputs.keyboard.key_down.one && $button_soft_ware.state.identifier != "DOCUMENT"
@@ -173,7 +188,7 @@ def do_things args
 
         xrer = 20 * index#( len[0] - 10) + 20 * index
       puts line
-      $new_doc.state.broken_words << "#{line} #{identify_spelling_option(args, line.upcase.tr('?,.!@#$%^&*()_+',''))}"if !is_word(line.tr('?,.!@#$%^&*()_+',''), args) && line != ""
+      $new_doc.state.broken_words << "#{line} #{identify_spelling_option(args, line.upcase.replace("-?,.!@#$%^&*()_+",''))}"if !is_word(line.replace("?,.!@#$%^&*()_+-",''), args) && line != ""
 
       end
   end
@@ -227,6 +242,7 @@ def tick args
   $button_soft_ware.args = args
   $button_soft_ware.init(args) if args.state.tick_count == 0
   $new_doc.args = args
+  $new_doc.state.file_name_txt ||= "default"
   $new_doc.state.colors ||= [[156,153,164],[67,67,67]]
   $new_doc.state.color_cur ||= 1
   $new_doc.state.lines    ||= [""]
@@ -281,6 +297,9 @@ def tick args
   args.outputs.labels << [900,700,"Button Sel: #{$button_soft_ware.state.identifier}"]
   args.outputs.labels << [650,650,"Line Count: #{$new_doc.state.line_cnt}"]
   args.outputs.labels << [650,675,"Current Line Min: #{args.state.display_cur}"]
+  args.outputs.sprites << [675,400,200,50,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+  args.outputs.labels << [680,435,$new_doc.state.file_name_txt]
+
 
 
   args.state.display_text.map_with_index do |s, i|

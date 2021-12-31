@@ -17,6 +17,14 @@
 class TypeWriter
 
     attr_gtk
+
+    def write_file_doc(args)
+      args.gtk.write_file "dialogue-#{args.state.file_name_txt}.txt",  args.state.lines[0] + ": " + args.state.lines.join("\n")
+    end
+
+    def open_file_doc(args)
+      args.gtk.read_file "dialogue-#{args.state.lines[0]}.txt"
+    end
   
     def append_array(args)
       if args.state.out_text.length > args.state.max_len 
@@ -57,6 +65,10 @@ class TypeWriter
       append_array(args)
     end
   
+    def write_file_name(args)
+      args.state.file_name_txt << args.inputs.text.join('')
+    end
+
     def append_string(args)
       args.state.out_text << args.inputs.text.join
       append_array(args)
@@ -92,8 +104,17 @@ class TypeWriter
       state.quit ||= {
         x: 520,y: 700-57,w: 48,h: 48
       }
-      state.name = ["UP ARROW","DOWN ARROW","DOCUMENT","SCROLL BAR","CHECK YOUR SPELLING","DARK THEME","RESTART","QUIT"]#, "DOCUMENT"]
-      state.button_list = [state.buttons_scroll_bar_up,state.buttons_scroll_bar_down,state.lettering_box,state.scroll_bar,state.check_spelling,state.dark_theme,state.restart,state.quit      ]#,state.lettering_box]
+      state.append ||= {
+        x: 20,y: 700-57,w: 48,h: 48
+      }
+      state.open_doc ||= {
+        x: 140,y: 700-57,w: 48,h: 48
+      }
+      state.file_name ||= {
+        x: 675,y: 400,w: 200,h: 50
+      }
+      state.name = ["UP ARROW","DOWN ARROW","DOCUMENT","SCROLL BAR","CHECK YOUR SPELLING","DARK THEME","RESTART","QUIT","APPEND","OPEN","FILE NAME"]#, "DOCUMENT"]
+      state.button_list = [state.buttons_scroll_bar_up,state.buttons_scroll_bar_down,state.lettering_box,state.scroll_bar,state.check_spelling,state.dark_theme,state.restart,state.quit,state.append,state.open_doc,state.file_name     ]#,state.lettering_box]
       state.identifier = "N/A"
     end
   
