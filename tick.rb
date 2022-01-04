@@ -53,7 +53,7 @@ def do_things args
     $button_soft_ware.state.identifier = "SPELL CHECK"
     puts args.state.display_text
     $new_doc.state.broken_words = []
-    temp = $new_doc.state.lines.join(" ")
+    temp = $new_doc.state.lines.join(" ").tr('?,./!@#$%^&*()_+','')
     puts temp
     mak = -1
     len = []
@@ -63,13 +63,17 @@ def do_things args
 
         xrer = 20 * index#( len[0] - 10) + 20 * index
       puts line
-      $new_doc.state.broken_words << "#{line} #{identify_spelling_option(args, line.upcase)}"if !is_word(line.tr('?,./!@#$%^&*()_+',''), args) && line != ""
+      $new_doc.state.broken_words << "#{line.tr("?,./!@#$%^&*()[]{}_+0123456789",'')} #{identify_spelling_option(args, line.upcase)}"if !is_word(line.tr("?,./!@#$%^&*()[]{}_+0123456789",''), args) && line != ""
 
       end
   end
 
   if $button_soft_ware.state.identifier == "FILE NAME" && !args.inputs.text.empty?
     $new_doc.write_file_name(args)
+  end
+
+  if $button_soft_ware.state.identifier == "CHAR NAME" && !args.inputs.text.empty?
+    $new_doc.append_character_name(args)
   end
 
   if args.state.tick_count % 10 == 1
@@ -144,6 +148,9 @@ def do_things args
     if $button_soft_ware.state.identifier == "DARK THEME"
       $new_doc.state.color_cur = 0
     end
+    if $button_soft_ware.state.identifier == "LIGHT THEME"
+      $new_doc.state.color_cur =1
+    end
     if $button_soft_ware.state.identifier == "RESTART"
       $new_doc = nil
       $button_soft_ware = nil
@@ -156,12 +163,17 @@ def do_things args
       $new_doc.write_file_doc(args)
     end
     if $button_soft_ware.state.identifier == "OPEN"
-      $new_doc.state.lines = $new_doc.open_file_doc(args).split("\n")
+      $new_doc.state.lines = $new_doc.open_file_doc(args,1).split("\n")
+      $new_doc.state.character_name_txt = $new_doc.open_file_doc(args,0).chomp
       $new_doc.state.line_cnt = $new_doc.state.lines.size
       $new_doc.state.cursor[:y] = $new_doc.state.lines.size  * -20 + 600
+      args.state.display_text = $new_doc.state.lines[0..args.state.display_cur]
     end
     if $button_soft_ware.state.identifier == "FILE NAME"
       $new_doc.state.file_name_txt = ""
+    end
+    if $button_soft_ware.state.identifier == "CHAR NAME"
+      $new_doc.state.character_name_txt = ""
     end
   end
 
@@ -243,10 +255,11 @@ def tick args
   $button_soft_ware.init(args) if args.state.tick_count == 0
   $new_doc.args = args
   $new_doc.state.file_name_txt ||= "default"
+  $new_doc.state.character_name_txt ||= "default"
   $new_doc.state.colors ||= [[156,153,164],[67,67,67]]
   $new_doc.state.color_cur ||= 1
   $new_doc.state.lines    ||= [""]
-  $new_doc.state.out_text ||= ""
+  $new_doc.state.out_text ||= "#{$new_doc.state.character_name_txt}: "
   $new_doc.state.max_len  ||= 58
   $new_doc.state.cursor   ||= { x: 20, y: 600, text: "_" }
   $new_doc.state.line_cnt ||= 0
@@ -285,9 +298,11 @@ def tick args
   args.outputs.sprites << [674,480,560,100,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
   args.outputs.sprites << [654,560,20,20,args.state.up_arrow,0,$new_doc.state.colors[$new_doc.state.color_cur]]
   args.outputs.sprites << [654,480,20,20,args.state.up_down,0,$new_doc.state.colors[$new_doc.state.color_cur]]
+  #themes
   args.outputs.sprites << $button_soft_ware.state.dark_theme if args.state.tick_count > 2
   args.outputs.labels << [680,600,"DARK THEME",0,255,255,255,255]
-
+  args.outputs.sprites << $button_soft_ware.state.light_theme if args.state.tick_count > 2
+  args.outputs.labels << [820,600,"LIGHT THEME",0,255,255,255,255]
 
 
   args.outputs.sprites << [600+17,600,20,20,args.state.up_arrow,0,$new_doc.state.colors[$new_doc.state.color_cur]]
@@ -297,10 +312,16 @@ def tick args
   args.outputs.labels << [900,700,"Button Sel: #{$button_soft_ware.state.identifier}"]
   args.outputs.labels << [650,650,"Line Count: #{$new_doc.state.line_cnt}"]
   args.outputs.labels << [650,675,"Current Line Min: #{args.state.display_cur}"]
-  args.outputs.sprites << [675,400,200,50,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+
+  #filename stuff
+  args.outputs.sprites << [675,400,350,50,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
   args.outputs.labels << [680,435,$new_doc.state.file_name_txt]
+  args.outputs.labels <<[1050,435,": File Name"]
 
-
+  #character name stuff
+  args.outputs.sprites << [675,300,350,50,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+  args.outputs.labels << [680,335,$new_doc.state.character_name_txt]
+  args.outputs.labels <<[1050,335,": Character Name"]
 
   args.state.display_text.map_with_index do |s, i|
     args.outputs.labels << { x: 20, y: 600 - (i * 20), text: s  }
@@ -313,7 +334,7 @@ def tick args
     end
   end
   #args.outputs.labels << {x: 684, y: 580, text: long_strings_split} unless $new_doc.state.broken_words == []
-  args.outputs.labels << {x: 674, y: 200, text: "#{args.inputs.mouse.point.x} : #{args.inputs.mouse.point.y} : #{args.inputs.mouse.click}"}
+  #args.outputs.labels << {x: 674, y: 200, text: "#{args.inputs.mouse.point.x} : #{args.inputs.mouse.point.y} : #{args.inputs.mouse.click}"}
 
   # limt = $new_doc.state.broken_words args.inputs.text
   # for i in 0...limt.size
