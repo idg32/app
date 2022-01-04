@@ -155,6 +155,7 @@ def do_things args
       $new_doc = nil
       $button_soft_ware = nil
       $gtk.reset
+      return
     end
     if $button_soft_ware.state.identifier == "QUIT"
       $gtk.request_quit
@@ -247,8 +248,8 @@ end
 
 
 def tick args
-  $new_doc ||= TypeWriter.new
-  $button_soft_ware ||= BUttonWorthingtonPaks.new
+  $new_doc = TypeWriter.new if $new_doc == nil
+  $button_soft_ware = BUttonWorthingtonPaks.new if $button_soft_ware == nil
   args.state.tick_count ||= 0
   load_file(args) if args.state.tick_count == 1
   $button_soft_ware.args = args
@@ -259,6 +260,9 @@ def tick args
   $new_doc.state.colors ||= [[156,153,164],[67,67,67]]
   $new_doc.state.color_cur ||= 1
   $new_doc.state.lines    ||= [""]
+  $new_doc.state.registry ||= []
+  $new_doc.state.registry = $new_doc.get_register(args).split("\n") unless $new_doc.get_register(args) == nil && args.state.tick_count != 1
+  #puts $new_doc.state.registry
   $new_doc.state.out_text ||= "#{$new_doc.state.character_name_txt}: "
   $new_doc.state.max_len  ||= 58
   $new_doc.state.cursor   ||= { x: 20, y: 600, text: "_" }
@@ -279,58 +283,71 @@ def tick args
   
   do_things(args) if args.state.tick_count > 1
 
-  args.outputs.sprites << [10,20,600,600,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
-  args.outputs.sprites << [20,700-57,576,54,"sprites/ui/binding_box_menu.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
-  args.outputs.sprites << [20,700-57,48,48,"sprites/ui/append.png"]
-  args.outputs.sprites << [140,700-57,48,48,"sprites/ui/open.png"]
-  args.outputs.sprites << [280,700-57,48,48,"sprites/ui/spellcheck.png"]
-  args.outputs.sprites << [400,700-57,48,48,"sprites/ui/restart.png"]
-  args.outputs.sprites << [520,700-57,48,48,"sprites/ui/Close.png"]
+  if args.state.tick_count > 10
+    args.outputs.sprites << [10,20,600,600,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+    args.outputs.sprites << [20,700-57,576,54,"sprites/ui/binding_box_menu.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+    args.outputs.sprites << [20,700-57,48,48,"sprites/ui/append.png"]
+    args.outputs.sprites << [140,700-57,48,48,"sprites/ui/open.png"]
+    args.outputs.sprites << [280,700-57,48,48,"sprites/ui/spellcheck.png"]
+    args.outputs.sprites << [400,700-57,48,48,"sprites/ui/restart.png"]
+    args.outputs.sprites << [520,700-57,48,48,"sprites/ui/Close.png"]
 
 
 
 
-  args.outputs.lines   << [30,630,600-30,630]
-  args.outputs.sprites << [600+17,20,20,600,"sprites/ui/vert_scroll_bar_bg.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
-  args.outputs.sprites << $button_soft_ware.state.scroll_bar if args.state.tick_count > 2
-  args.outputs.sprites << [654,20,600,600,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
-  #this is the spelling error box
-  args.outputs.sprites << [674,480,560,100,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
-  args.outputs.sprites << [654,560,20,20,args.state.up_arrow,0,$new_doc.state.colors[$new_doc.state.color_cur]]
-  args.outputs.sprites << [654,480,20,20,args.state.up_down,0,$new_doc.state.colors[$new_doc.state.color_cur]]
-  #themes
-  args.outputs.sprites << $button_soft_ware.state.dark_theme if args.state.tick_count > 2
-  args.outputs.labels << [680,600,"DARK THEME",0,255,255,255,255]
-  args.outputs.sprites << $button_soft_ware.state.light_theme if args.state.tick_count > 2
-  args.outputs.labels << [820,600,"LIGHT THEME",0,255,255,255,255]
+    args.outputs.lines   << [30,630,600-30,630]
+    args.outputs.sprites << [600+17,20,20,600,"sprites/ui/vert_scroll_bar_bg.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+    args.outputs.sprites << $button_soft_ware.state.scroll_bar if args.state.tick_count > 2
+    args.outputs.sprites << [654,20,600,600,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+    #this is the spelling error box
+    args.outputs.sprites << [674,480,560,100,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+    args.outputs.sprites << [654,560,20,20,args.state.up_arrow,0,$new_doc.state.colors[$new_doc.state.color_cur]]
+    args.outputs.sprites << [654,480,20,20,args.state.up_down,0,$new_doc.state.colors[$new_doc.state.color_cur]]
+    #themes
+    args.outputs.sprites << $button_soft_ware.state.dark_theme if args.state.tick_count > 2
+    args.outputs.labels << [680,600,"DARK THEME",0,255,255,255,255]
+    args.outputs.sprites << $button_soft_ware.state.light_theme if args.state.tick_count > 2
+    args.outputs.labels << [820,600,"LIGHT THEME",0,255,255,255,255]
 
 
-  args.outputs.sprites << [600+17,600,20,20,args.state.up_arrow,0,$new_doc.state.colors[$new_doc.state.color_cur]]
-  args.outputs.sprites << [600+17,20,20,20,args.state.up_down,0,$new_doc.state.colors[$new_doc.state.color_cur]]
-  args.outputs.labels << [650,700,"Line Length: #{$new_doc.state.out_text.length}"]
-  args.outputs.labels << [900,650,"LAST KEY: #{args.state.last_key}"]
-  args.outputs.labels << [900,700,"Button Sel: #{$button_soft_ware.state.identifier}"]
-  args.outputs.labels << [650,650,"Line Count: #{$new_doc.state.line_cnt}"]
-  args.outputs.labels << [650,675,"Current Line Min: #{args.state.display_cur}"]
+    args.outputs.sprites << [600+17,600,20,20,args.state.up_arrow,0,$new_doc.state.colors[$new_doc.state.color_cur]]
+    args.outputs.sprites << [600+17,20,20,20,args.state.up_down,0,$new_doc.state.colors[$new_doc.state.color_cur]]
+    args.outputs.labels << [650,700,"Line Length: #{$new_doc.state.out_text.length}"]
+    args.outputs.labels << [900,650,"LAST KEY: #{args.state.last_key}"]
+    args.outputs.labels << [900,700,"Button Sel: #{$button_soft_ware.state.identifier}"]
+    args.outputs.labels << [650,650,"Line Count: #{$new_doc.state.line_cnt}"]
+    args.outputs.labels << [650,675,"Current Line Min: #{args.state.display_cur}"]
 
-  #filename stuff
-  args.outputs.sprites << [675,400,350,50,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
-  args.outputs.labels << [680,435,$new_doc.state.file_name_txt]
-  args.outputs.labels <<[1050,435,": File Name"]
+    #filename stuff
+    args.outputs.sprites << [675,400,350,50,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+    args.outputs.labels << [680,435,$new_doc.state.file_name_txt]
+    args.outputs.labels <<[1050,435,": File Name"]
+    args.outputs.sprites << [675,60,400,200,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+    #list file names
+    #string_file_names = args.string.wrapped_lines $new_doc.state.registry.join(" "), 49 unless $new_doc.state.registry.empty? || $button_soft_ware.state.identifier == "OPEN"
+    #args.outputs.labels << [680,180,$new_doc.state.registry.join(" ")]
+    #if !$new_doc.state.registry.empty? 
+      args.outputs.labels << $new_doc.state.registry.map_with_index do |s, i| 
+        { x: 690, y: 220 - (i * 20), text: s }
+      end
+    #end
 
-  #character name stuff
-  args.outputs.sprites << [675,300,350,50,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
-  args.outputs.labels << [680,335,$new_doc.state.character_name_txt]
-  args.outputs.labels <<[1050,335,": Character Name"]
 
-  args.state.display_text.map_with_index do |s, i|
-    args.outputs.labels << { x: 20, y: 600 - (i * 20), text: s  }
-  end
 
-  long_strings_split = args.string.wrapped_lines $new_doc.state.broken_words.join(" ") , 49 unless $new_doc.state.broken_words.empty?
-  if !$new_doc.state.broken_words.empty? 
-    args.outputs.labels << long_strings_split.map_with_index do |s, i| 
-      { x: 684, y: 580 - (i * 20), text: s }
+    #character name stuff
+    args.outputs.sprites << [675,300,350,50,"sprites/ui/binding_box_lettering.png",0,$new_doc.state.colors[$new_doc.state.color_cur]]
+    args.outputs.labels << [680,335,$new_doc.state.character_name_txt]
+    args.outputs.labels <<[1050,335,": Character Name"]
+
+    args.state.display_text.map_with_index do |s, i|
+      args.outputs.labels << { x: 20, y: 600 - (i * 20), text: s  }
+    end
+
+    long_strings_split = args.string.wrapped_lines $new_doc.state.broken_words.join(" ") , 49 unless $new_doc.state.broken_words.empty?
+    if !$new_doc.state.broken_words.empty? 
+      args.outputs.labels << long_strings_split.map_with_index do |s, i| 
+        { x: 684, y: 580 - (i * 20), text: s }
+      end
     end
   end
   #args.outputs.labels << {x: 684, y: 580, text: long_strings_split} unless $new_doc.state.broken_words == []

@@ -27,9 +27,17 @@ class TypeWriter
       args.gtk.write_file "exports/#{args.state.file_name_txt}/dialogue-#{args.state.file_name_txt}.txt",  this_new_line.join("\n")
       args.gtk.write_file "exports/#{args.state.file_name_txt}/dialogue-array-#{args.state.file_name_txt}.txt",  args.state.lines.join("\n")
       args.gtk.write_file "exports/#{args.state.file_name_txt}/character-#{args.state.file_name_txt}.txt", args.state.character_name_txt
+      args.gtk.append_file "exports/register.txt", "#{args.state.file_name_txt}" + " \n" unless args.state.registry.include?(args.state.file_name_txt)
+    end
+
+    def get_register(args)
+      return args.gtk.read_file "exports/register.txt" unless nil
+      return ""
     end
 
     def open_file_doc(args, ch)
+      args.state.registry = get_register(args).split("\n") unless nil
+      args.gtk.append_file "exports/register.txt", "#{args.state.file_name_txt}" + " \n" unless args.state.registry.join("\n").include?(args.state.file_name_txt)
       return args.gtk.read_file "exports/#{args.state.file_name_txt}/character-#{args.state.file_name_txt}.txt" if ch == 0
       return args.gtk.read_file "exports/#{args.state.file_name_txt}/dialogue-array-#{args.state.file_name_txt}.txt" if ch == 1
     end
@@ -133,8 +141,11 @@ class TypeWriter
       state.character_name ||= {
         x: 675,y: 300,w: 350,h: 50
       }
-      state.name = ["UP ARROW","DOWN ARROW","DOCUMENT","SCROLL BAR","CHECK YOUR SPELLING","DARK THEME","RESTART","QUIT","APPEND","OPEN","FILE NAME","CHAR NAME","LIGHT THEME"]#, "DOCUMENT"]
-      state.button_list = [state.buttons_scroll_bar_up,state.buttons_scroll_bar_down,state.lettering_box,state.scroll_bar,state.check_spelling,state.dark_theme,state.restart,state.quit,state.append,state.open_doc,state.file_name,state.character_name,state.light_theme     ]#,state.lettering_box]
+      state.file_list ||= {
+        x: 680,y: 60, w:400, h:200
+      }
+      state.name = ["UP ARROW","DOWN ARROW","DOCUMENT","SCROLL BAR","CHECK YOUR SPELLING","DARK THEME","RESTART","QUIT","APPEND","OPEN","FILE NAME","CHAR NAME","LIGHT THEME","FILE LIST"]#, "DOCUMENT"]
+      state.button_list = [state.buttons_scroll_bar_up,state.buttons_scroll_bar_down,state.lettering_box,state.scroll_bar,state.check_spelling,state.dark_theme,state.restart,state.quit,state.append,state.open_doc,state.file_name,state.character_name,state.light_theme,state.file_list     ]#,state.lettering_box]
       state.identifier = "N/A"
     end
   
